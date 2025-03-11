@@ -4,7 +4,7 @@ import { lucia } from "@/lib/auth";
 import { validateRequest } from "@/lib/auth";
 import { cache } from "react";
 import { AuthenticationError } from "../use-cases/errors";
-import { UserId } from "@/use-cases/types";
+import type { UserId } from "@/use-cases/types";
 
 export const getCurrentUser = cache(async () => {
   const session = await validateRequest();
@@ -25,7 +25,8 @@ export const assertAuthenticated = async () => {
 export async function setSession(userId: UserId) {
   const session = await lucia.createSession(userId, {});
   const sessionCookie = lucia.createSessionCookie(session.id);
-  cookies().set(
+  const cookieStore = await cookies();
+  cookieStore.set(
     sessionCookie.name,
     sessionCookie.value,
     sessionCookie.attributes,

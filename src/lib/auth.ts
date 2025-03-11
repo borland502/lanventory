@@ -4,10 +4,10 @@ import { DrizzleSQLiteAdapter } from "@lucia-auth/adapter-drizzle";
 import { db } from "@/db";
 import { sessions, users } from "@/db/schema";
 import { cookies } from "next/headers";
-import { User } from "lucia";
-import { Session } from "lucia";
+import type { User } from "lucia";
+import type { Session } from "lucia";
 import { env } from "@/env";
-import { UserId as CustomUserId } from "@/types";
+import type { UserId as CustomUserId } from "@/types";
 
 const adapter = new DrizzleSQLiteAdapter(db, sessions, users);
 
@@ -28,7 +28,15 @@ export const lucia = new Lucia(adapter, {
 export const validateRequest = async (): Promise<
   { user: User; session: Session } | { user: null; session: null }
 > => {
-  const sessionId = cookies().get(lucia.sessionCookieName)?.value ?? null;
+  const cookieStore = (await cookies()) as {
+    get: (name: string) => { value: string } | undefined;
+    set: (
+      name: string,
+      value: string,
+      attributes: Record<string, unknown>,
+    ) => void;
+  };
+  const sessionId = cookieStore.get(lucia.sessionCookieName)?.value ?? null;
   if (!sessionId) {
     return {
       user: null,
@@ -42,18 +50,18 @@ export const validateRequest = async (): Promise<
   try {
     if (result.session && result.session.fresh) {
       const sessionCookie = lucia.createSessionCookie(result.session.id);
-      cookies().set(
+      cookieStore.set(
         sessionCookie.name,
         sessionCookie.value,
-        sessionCookie.attributes,
+        sessionCookie.attributes as Record<string, unknown>,
       );
     }
     if (!result.session) {
       const sessionCookie = lucia.createBlankSessionCookie();
-      cookies().set(
+      cookieStore.set(
         sessionCookie.name,
         sessionCookie.value,
-        sessionCookie.attributes,
+        sessionCookie.attributes as Record<string, unknown>,
       );
     }
   } catch {}
@@ -69,10 +77,10 @@ declare module "lucia" {
     UserId: CustomUserId;
   }
 }
-
 export const github = new GitHub(
   env.GITHUB_CLIENT_ID,
   env.GITHUB_CLIENT_SECRET,
+  `${env.HOST_NAME}/api/login/github/callback`,
 );
 
 export const googleAuth = new Google(
