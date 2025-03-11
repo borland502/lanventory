@@ -20,6 +20,7 @@ env:
 tasks:
   init:
     desc: "Install dependencies"
+    silent: true
     cmds:
       - bun install
       # Dump some environment variables to a nodejs friendly .env file TODO: Copy sample to .config/lanventory/.env and then configure with defaults per env
@@ -38,6 +39,7 @@ tasks:
         EMAIL_SERVER_PORT={{.EMAIL_SERVER_PORT}}
         EMAIL_FROM={{.EMAIL_FROM}}
         EOF
+      - cmd: mkdir -p {{.XDG_DATA_HOME}}/lanventory
     sources:
       - node_modules
     generates:
@@ -55,13 +57,34 @@ tasks:
     deps:
       - init
     cmds:
-      - "mkdir -p {{.XDG_DATA_HOME}}/lanventory"
-      - bunx drizzle-kit generate --schema ./src/db/schema.ts --dialect sqlite
+      - bunx drizzle-kit generate --config="drizzle.config.ts"
 
   drizzle-sync:
     desc: "Sync the database with the latest schema"
     deps:
       - init
     cmds:
-      - "mkdir -p {{.XDG_DATA_HOME}}/lanventory"
-      - bunx drizzle-kit push --url $DATABASE_URL --schema ./src/db/schema.ts --dialect sqlite
+      - bunx drizzle-kit push --config="drizzle.config.ts"
+
+  drizzle-studio:
+    desc: "Open the database studio"
+    deps:
+      - init
+    cmds:
+      - bunx drizzle-kit studio --config="drizzle.config.ts"
+
+  drizzle-reset:
+    desc: "Reset the database"
+    deps:
+      - init
+    cmds:
+      - bunx drizzle-kit reset --config="drizzle.config.ts"
+
+  tools:nmap:
+    desc: "Install nmap"
+    status:
+      - $(command -v nmap) || brew install nmap
+    deps:
+      - init
+    cmds:
+      - bun run src/bin/main.ts nmap 192.168.2.0/24 /tmp/ip-range.xml
