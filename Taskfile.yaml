@@ -1,0 +1,67 @@
+version: "3"
+
+vars:
+  XDG_DATA_HOME: "{{.HOME}}/.local/share"
+
+env:
+  DATABASE_URL: "file:{{.XDG_DATA_HOME}}/lanventory/lanventory.sqlite"
+  DB_AUTH_TOKEN: IF_USING_TURSO
+  HOST_NAME: "http://localhost:3000"
+  GOOGLE_CLIENT_ID: 123
+  GOOGLE_CLIENT_SECRET: 123
+  GITHUB_CLIENT_SECRET: 123
+  GITHUB_CLIENT_ID: 123
+  EMAIL_SERVER_USER: resend
+  EMAIL_SERVER_PASSWORD: ADD_YOUR_KEY
+  EMAIL_SERVER_HOST: smtp.resend.com
+  EMAIL_SERVER_PORT: 465
+  EMAIL_FROM: "Your App <no-reply@yourdoman.com>"
+
+tasks:
+  init:
+    desc: "Install dependencies"
+    cmds:
+      - bun install
+      # Dump some environment variables to a nodejs friendly .env file TODO: Copy sample to .config/lanventory/.env and then configure with defaults per env
+      - |
+        cat <<'EOF' > .env
+        DATABASE_URL={{.DATABASE_URL}}
+        DB_AUTH_TOKEN={{.DB_AUTH_TOKEN}}
+        HOST_NAME={{.HOST_NAME}}
+        GOOGLE_CLIENT_ID={{.GOOGLE_CLIENT_ID}}
+        GOOGLE_CLIENT_SECRET={{.GOOGLE_CLIENT_SECRET}}
+        GITHUB_CLIENT_SECRET={{.GITHUB_CLIENT_SECRET}}
+        GITHUB_CLIENT_ID={{.GITHUB_CLIENT_ID}}
+        EMAIL_SERVER_USER={{.EMAIL_SERVER_USER}}
+        EMAIL_SERVER_PASSWORD={{.EMAIL_SERVER_PASSWORD}}
+        EMAIL_SERVER_HOST={{.EMAIL_SERVER_HOST}}
+        EMAIL_SERVER_PORT={{.EMAIL_SERVER_PORT}}
+        EMAIL_FROM={{.EMAIL_FROM}}
+        EOF
+    sources:
+      - node_modules
+    generates:
+      - bun.lock
+
+  run:
+    desc: "Run the test application for lanventory"
+    deps:
+      - init
+    cmds:
+      - bun run dev
+
+  drizzle-gen:
+    desc: "Generate the database schema"
+    deps:
+      - init
+    cmds:
+      - "mkdir -p {{.XDG_DATA_HOME}}/lanventory"
+      - bunx drizzle-kit generate --schema ./src/db/schema.ts --dialect sqlite
+
+  drizzle-sync:
+    desc: "Sync the database with the latest schema"
+    deps:
+      - init
+    cmds:
+      - "mkdir -p {{.XDG_DATA_HOME}}/lanventory"
+      - bunx drizzle-kit push --url $DATABASE_URL --schema ./src/db/schema.ts --dialect sqlite

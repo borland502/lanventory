@@ -43,3 +43,8 @@ pnpm-lock.yaml
 .env
 
 local.db
+
+drizzle
+
+# Taskfiles
+.task
