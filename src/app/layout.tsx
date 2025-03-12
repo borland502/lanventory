@@ -39,7 +39,7 @@ export default async function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body
         className={cn(
-          "min-h-screen bg-background antialiased",
+          "bg-background min-h-screen antialiased",
           archivo.variable + " " + libre_franklin.variable,
         )}
       >
