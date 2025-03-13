@@ -9,7 +9,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { LayoutDashboard, Lightbulb, Loader2Icon, LogOut } from "lucide-react";
 import { ModeToggle } from "./mode-toggle";
 import { MenuButton } from "./menu-button";

@@ -1,6 +1,6 @@
 import { Command } from "commander";
-import { nmapScan } from "../lib/probes/nmap";
-import { reverseLookup } from "../lib/probes/dns";
+import { nmapScan } from "../actions/probes/nmap";
+import { reverseLookup } from "../actions/probes/dns";
 import { IPv4 } from "ip-num";
 
 const program = new Command();

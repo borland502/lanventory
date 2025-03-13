@@ -7,19 +7,9 @@ env:
   DATABASE_URL: "file:{{.XDG_DATA_HOME}}/lanventory/lanventory.sqlite"
   DB_AUTH_TOKEN: IF_USING_TURSO
   HOST_NAME: "http://localhost:3000"
-  GOOGLE_CLIENT_ID: 123
-  GOOGLE_CLIENT_SECRET: 123
-  GITHUB_CLIENT_SECRET: 123
-  GITHUB_CLIENT_ID: 123
-  EMAIL_SERVER_USER: resend
-  EMAIL_SERVER_PASSWORD: ADD_YOUR_KEY
-  EMAIL_SERVER_HOST: smtp.resend.com
-  EMAIL_SERVER_PORT: 465
-  EMAIL_FROM: "Your App <no-reply@yourdoman.com>"
 
 tasks:
   init:
-    desc: "Install dependencies"
     silent: true
     cmds:
       - bun install
@@ -29,15 +19,6 @@ tasks:
         DATABASE_URL={{.DATABASE_URL}}
         DB_AUTH_TOKEN={{.DB_AUTH_TOKEN}}
         HOST_NAME={{.HOST_NAME}}
-        GOOGLE_CLIENT_ID={{.GOOGLE_CLIENT_ID}}
-        GOOGLE_CLIENT_SECRET={{.GOOGLE_CLIENT_SECRET}}
-        GITHUB_CLIENT_SECRET={{.GITHUB_CLIENT_SECRET}}
-        GITHUB_CLIENT_ID={{.GITHUB_CLIENT_ID}}
-        EMAIL_SERVER_USER={{.EMAIL_SERVER_USER}}
-        EMAIL_SERVER_PASSWORD={{.EMAIL_SERVER_PASSWORD}}
-        EMAIL_SERVER_HOST={{.EMAIL_SERVER_HOST}}
-        EMAIL_SERVER_PORT={{.EMAIL_SERVER_PORT}}
-        EMAIL_FROM={{.EMAIL_FROM}}
         EOF
       - cmd: mkdir -p {{.XDG_DATA_HOME}}/lanventory
     sources:

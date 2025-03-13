@@ -6,7 +6,6 @@ import {
   createUpdateSchema,
 } from "drizzle-zod";
 import { z } from "zod";
-import { IPv4 } from "ip-num";
 
 // # drizzle schema
 
@@ -14,8 +13,8 @@ export const nowTable = sqliteTable("now", {
   id: int("ID").notNull().unique().primaryKey({ autoIncrement: true }),
   name: text("NAME").notNull().$type<string>(),
   host_name: text("HOST_NAME").default("").$type<string>(),
-  ip: text("IP").unique().$type<IPv4>(),
-  mac: text("MAC").unique().$type<string>(),
+  ip: text("IP").$type<string>(),
+  mac: text("MAC").$type<string>(),
   hw: text("HW").$type<string>(),
   date: text("DATE").$type<Date>(),
   known: int("KNOWN").default(0).$type<boolean>(),
