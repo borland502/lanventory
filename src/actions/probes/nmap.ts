@@ -4,7 +4,10 @@ import { exec } from "child_process";
 import { promises as fs } from "fs";
 import { XMLParser } from "fast-xml-parser";
 import { promisify } from "util";
-import { upsertHosts } from "@/app/services/host.data-service";
+import {
+  moveHostsToHistory,
+  upsertHosts,
+} from "@/app/services/host.data-service";
 import { NowInsertSchema, NowSchema } from "@/db/schema";
 
 const execAsync = promisify(exec);
@@ -53,8 +56,6 @@ async function parseNmapXmlToSql(filename: string): Promise<NowInsertSchema[]> {
       }
     }
 
-    console.info(`Found IP: ${ip}, MAC: ${mac}, HW: ${hw}`);
-
     // Extract the host name
     let host_name = "";
     if (host.hostnames && host.hostnames.hostname) {
@@ -65,6 +66,8 @@ async function parseNmapXmlToSql(filename: string): Promise<NowInsertSchema[]> {
       }
     }
 
+    console.info(`Found host: ${host_name} IP: ${ip}, MAC: ${mac}, HW: ${hw}`);
+
     // Determine the name
     let name = "";
     if (host_name) {
@@ -74,45 +77,21 @@ async function parseNmapXmlToSql(filename: string): Promise<NowInsertSchema[]> {
       name = ip;
     }
 
-    // Skip parsing if IP, MAC, or name is blank or null
-    if (!ip || !mac || !name) {
-      continue;
-    }
-
     // Extract the host status state
     const state = host.status ? host.status.state : "";
 
-    // Check if port 22 or 2222 is in an open state
-    let portOpen = false;
-    if (host.ports && host.ports.port) {
-      const ports = Array.isArray(host.ports.port)
-        ? host.ports.port
-        : [host.ports.port];
-      for (const port of ports) {
-        if (
-          (port.portid === "22" || port.portid === "2222") &&
-          port.state.state === "open"
-        ) {
-          portOpen = true;
-          break;
-        }
-      }
-    }
-
-    // Only create an SQL insert statement if port 22 or 2222 is open
-    if (portOpen) {
-      const date = new Date();
-      records.push({
-        ip,
-        mac,
-        host_name,
-        name,
-        hw,
-        date,
-        now: true,
-        known: false,
-      });
-    }
+    // TODO: Find a means of determining port open more reliably
+    const date = new Date();
+    records.push({
+      ip,
+      mac,
+      host_name,
+      name,
+      hw,
+      date,
+      now: true,
+      known: false,
+    });
   }
 
   return records;
@@ -120,6 +99,9 @@ async function parseNmapXmlToSql(filename: string): Promise<NowInsertSchema[]> {
 
 export async function networkScan(ipRange: string, outputFilename: string) {
   try {
+    // TODO: Rollback if any subsequent steps fail
+    await moveHostsToHistory();
+
     const { stdout, stderr } = await execAsync(
       `sudo nmap -p22,2222 -T4 -A -R --system-dns -oX ${outputFilename} ${ipRange}`,
     );
@@ -129,6 +111,8 @@ export async function networkScan(ipRange: string, outputFilename: string) {
     }
 
     const hosts = await parseNmapXmlToSql(outputFilename);
+    console.info(`Parsed ${hosts.length} hosts from nmap XML file`);
+
     await upsertHosts(hosts);
   } catch (error) {
     console.error("Error running network scan:", error);

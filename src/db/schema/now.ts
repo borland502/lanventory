@@ -13,7 +13,7 @@ export const nowTable = sqliteTable("now", {
   id: int("ID").notNull().unique().primaryKey({ autoIncrement: true }),
   name: text("NAME").notNull().$type<string>(),
   host_name: text("HOST_NAME").default("").$type<string>(),
-  ip: text("IP").$type<string>(),
+  ip: text("IP").unique().$type<string>(),
   mac: text("MAC").$type<string>(),
   hw: text("HW").$type<string>(),
   date: text("DATE").$type<Date>(),

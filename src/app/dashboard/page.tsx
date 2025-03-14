@@ -49,14 +49,26 @@ const columns: ColumnDef<NowSchema>[] = [
       {
         accessorKey: "date",
         header: () => <span>Date</span>,
+        cell(props) {
+          const value = props.getValue();
+          const date = new Date();
+          date.setTime(value);
+          return <span>{date.toLocaleDateString("en-US")}</span>;
+        },
       },
       {
         accessorKey: "known",
         header: () => <span>Known</span>,
+        cell(props) {
+          return <input type="checkbox" checked={props.getValue()} />;
+        },
       },
       {
         accessorKey: "now",
         header: () => <span>Now</span>,
+        cell(props) {
+          return <input type="checkbox" checked={props.getValue()} />;
+        },
       },
     ],
   },
