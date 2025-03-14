@@ -1,10 +1,10 @@
 "use server";
 
-import { NowInsertSchema, nowTable } from "@/db/schema";
+import { NowSchema, nowTable } from "@/db/schema";
 import { db } from "@/db";
 import { sql } from "drizzle-orm";
 
-export async function upsertHosts(hosts: NowInsertSchema[]) {
+export async function upsertHosts(hosts: NowSchema[]) {
   if (hosts.length === 0) {
     return;
   }
@@ -16,4 +16,8 @@ export async function upsertHosts(hosts: NowInsertSchema[]) {
       target: nowTable.id,
       set: { ...hosts, ip: sql`now.ip`, mac: sql`now.mac` },
     });
+}
+
+export async function selectAllHosts(): Promise<NowSchema[]> {
+  return await db.select().from(nowTable);
 }

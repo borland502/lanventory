@@ -1,10 +1,7 @@
 version: "3"
 
-vars:
-  XDG_DATA_HOME: "{{.HOME}}/.local/share"
-
 env:
-  DATABASE_URL: "file:{{.XDG_DATA_HOME}}/lanventory/lanventory.sqlite"
+  DATABASE_URL: "file:{{.HOME}}/.local/share/lanventory/lanventory.sqlite"
   DB_AUTH_TOKEN: IF_USING_TURSO
   HOST_NAME: "http://localhost:3000"
 

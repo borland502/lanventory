@@ -1,13 +1,15 @@
+"use server";
+
 import { exec } from "child_process";
 import { promises as fs } from "fs";
 import { XMLParser } from "fast-xml-parser";
 import { promisify } from "util";
-import { insertHosts, upsertHosts } from "@/app/services/host.data-service";
-import { NowInsertSchema } from "@/db/schema";
+import { upsertHosts } from "@/app/services/host.data-service";
+import { NowInsertSchema, NowSchema } from "@/db/schema";
 
 const execAsync = promisify(exec);
 
-async function parseNmapXmlToSql(filename: string): Promise<NowInsertSchema[]> {
+async function parseNmapXmlToSql(filename: string): Promise<NowSchema[]> {
   // Read the entire XML file produced by nmapScan
   const xmlData = await fs.readFile(filename, "utf-8");
 
@@ -117,8 +119,6 @@ async function parseNmapXmlToSql(filename: string): Promise<NowInsertSchema[]> {
 }
 
 export async function networkScan(ipRange: string, outputFilename: string) {
-  "use server";
-
   try {
     const { stdout, stderr } = await execAsync(
       `sudo nmap -p22,2222 -T4 -A -R --system-dns -oX ${outputFilename} ${ipRange}`,
