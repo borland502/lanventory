@@ -9,7 +9,7 @@ import { NowInsertSchema, NowSchema } from "@/db/schema";
 
 const execAsync = promisify(exec);
 
-async function parseNmapXmlToSql(filename: string): Promise<NowSchema[]> {
+async function parseNmapXmlToSql(filename: string): Promise<NowInsertSchema[]> {
   // Read the entire XML file produced by nmapScan
   const xmlData = await fs.readFile(filename, "utf-8");
 

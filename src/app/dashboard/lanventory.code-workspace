@@ -1,11 +1,7 @@
 {
-	"folders": [
-		{
-			"path": "../../.."
-		},
-		{
-			"path": "../../../../.local/share/lanventory"
-		}
-	],
-	"settings": {}
+  "folders": [
+    {
+      "path": "../../..",
+    },
+  ],
 }

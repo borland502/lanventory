@@ -1,10 +1,10 @@
 "use server";
 
-import { NowSchema, nowTable } from "@/db/schema";
+import { NowInsertSchema, NowSchema, nowTable } from "@/db/schema";
 import { db } from "@/db";
 import { sql } from "drizzle-orm";
 
-export async function upsertHosts(hosts: NowSchema[]) {
+export async function upsertHosts(hosts: NowInsertSchema[]) {
   if (hosts.length === 0) {
     return;
   }

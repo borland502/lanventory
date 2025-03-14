@@ -13,6 +13,8 @@ import { selectAllHosts } from "../services/host.data-service";
 import React from "react";
 import ReactDOM from "react-dom/client";
 
+import "bootstrap/dist/css/bootstrap.min.css";
+
 import { Table as BTable } from "react-bootstrap";
 
 const columns: ColumnDef<NowSchema>[] = [
@@ -100,7 +102,7 @@ export default function DashboardPage() {
         </button>
       </form>
       <div>
-        <BTable striped bordered hover responsive size="md">
+        <BTable striped bordered hover responsive size="lg">
           <thead>
             {table.getHeaderGroups().map((headerGroup) => (
               <tr key={headerGroup.id}>
