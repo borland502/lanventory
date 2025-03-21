@@ -1,8 +1,7 @@
 import { Command } from "commander";
-import { nmapScan } from "../actions/probes/nmap";
+import { networkScan } from "@/lib/probes/nmap";
 import { reverseLookup } from "../actions/probes/dns";
-import { IPv4 } from "ip-num";
-
+import { IPv4, IPv4CidrRange } from "ip-num";
 const program = new Command();
 
 program
@@ -12,30 +11,28 @@ program
 
 program
   .command("nmap")
-  .description("Run an nmap scan")
+  .description("Run an nmap scan using node-nmap-hosts")
   .argument("<ipRange>", "IP range to scan")
-  .argument("<outputFilename>", "Output filename for the scan results")
-  .action(async (ipRange, outputFilename) => {
+  .action(async (ipRange) => {
     try {
-      await nmapScan(ipRange, outputFilename);
-      console.log("Nmap scan completed successfully.");
+      networkScan(ipRange);
     } catch (error) {
       console.error("Error running nmap scan:", error);
     }
   });
 
-program
-  .command("dns")
-  .description("Perform a reverse DNS lookup")
-  .argument("<ip>", "IP address or comma-separated list of IP addresses")
-  .action(async (ip) => {
-    try {
-      const ipArray = ip.split(",").map((ipStr) => IPv4.fromString(ipStr));
-      const hostnames = await reverseLookup(ipArray);
-      console.log("Reverse DNS lookup results:", hostnames);
-    } catch (error) {
-      console.error("Error performing reverse DNS lookup:", error);
-    }
-  });
+// program
+//   .command("dns")
+//   .description("Perform a reverse DNS lookup")
+//   .argument("<ip>", "IP address or comma-separated list of IP addresses")
+//   .action(async (ip) => {
+//     try {
+//       const ipArray = ip.split(",").map((ipStr) => IPv4.fromString(ip));
+//       const hostnames = await reverseLookup(ipArray);
+//       console.log("Reverse DNS lookup results:", hostnames);
+//     } catch (error) {
+//       console.error("Error performing reverse DNS lookup:", error);
+//     }
+//   });
 
 program.parse(process.argv);

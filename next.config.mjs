@@ -1,4 +1,7 @@
 /** @type {import('next').NextConfig} */
+
+import { ChildProcess } from 'node:child_process';
+
 const nextConfig = {
   reactStrictMode: true,
   experimental: {
@@ -16,6 +19,17 @@ const nextConfig = {
       },
     ],
   },
+  "webpack": (config, { isServer }) => {
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        child_process: false
+      };
+    }
+    return config;
+  }
 };
+
+
 
 export default nextConfig;

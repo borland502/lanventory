@@ -1,5 +1,5 @@
 "use client";
-import { networkScan } from "@/actions/probes/nmap";
+import { networkScan } from "@/lib/probes";
 import { NowSchema } from "@/db/schema";
 
 import {
@@ -11,7 +11,6 @@ import {
 } from "@tanstack/react-table";
 import { selectAllHosts } from "../services/host.data-service";
 import React from "react";
-import ReactDOM from "react-dom/client";
 
 import "bootstrap/dist/css/bootstrap.min.css";
 
@@ -107,7 +106,7 @@ export default function DashboardPage() {
               typeof outputFilename !== "string"
             )
               return;
-            await networkScan(ipRange, outputFilename);
+            await networkScan(ipRange);
           }}
         >
           Network Scan
