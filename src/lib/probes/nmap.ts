@@ -27,7 +27,7 @@ export async function networkScan(ipRange: string, ...ports: number[]) {
             ip: hostInfo.ip,
             mac: hostInfo.mac,
             host_name: hostInfo.hostname,
-            name: hostInfo.hostname?.split(".")[0],
+            name: hostInfo.hostname?.split(".")[0] || hostInfo.ip,
             hw: hostInfo.vendor,
             date: new Date(),
             now: true,

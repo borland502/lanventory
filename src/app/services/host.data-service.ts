@@ -3,10 +3,7 @@
 import { NowInsertSchema, NowSchema, nowTable } from "@/db/schema";
 import { db } from "@/db";
 import { sql } from "drizzle-orm";
-import { reverseLookup } from "@/actions/probes/dns";
-import { IPv4 } from "ip-num";
 import { historyTable } from "@/db/schema";
-import { merge } from "radash";
 
 export async function upsertHosts(hosts: NowInsertSchema[]) {
   await db
@@ -16,9 +13,6 @@ export async function upsertHosts(hosts: NowInsertSchema[]) {
       target: [nowTable.id],
       set: {
         known: sql`EXCLUDED.known`,
-        // For example, if you have an "ip" column:
-        // ip: sql`EXCLUDED.ip`,
-        // Add other columns as required
       },
     });
 }

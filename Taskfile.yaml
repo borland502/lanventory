@@ -23,6 +23,13 @@ tasks:
     generates:
       - bun.lock
 
+  build:
+    desc: "Build the SPA for lanventory"
+    deps:
+      - init
+    cmds:
+      - bun build src/scripts/main.ts --compile --outfile ./dist/lanventory
+
   run:
     desc: "Run the test application for lanventory"
     deps:
