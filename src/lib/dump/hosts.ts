@@ -1,64 +1,48 @@
 import * as hostile from "hostile";
-import { selectAllHosts } from "@/app/services/host.data-service";
-import { writeFile } from "node:fs";
+import {
+  selectAllHosts,
+  selectHostsWithHostname,
+} from "@/app/services/host.data-service";
+import { writeFile, readFile } from "node:fs";
+import { $ } from "bun";
+import { map, select } from "radash";
+import { NowSchema } from "@/db/schema";
 
-export async function getHostsFromDatabase(): Promise<hostile.Lines> {
-  return (await selectAllHosts())
-    .filter((host) => host.ip && host.host_name)
-    .map((host) => `${host.ip} ${host.host_name}`);
+export async function getHostsFromDatabase() {
+  return select(
+    await selectHostsWithHostname(),
+    (host: NowSchema) =>
+      `${host.ip?.trim()} ${host.host_name?.trim()} ${host.name.trim()}`,
+    (host: NowSchema) =>
+      host.ip !== null && host.host_name !== null && host.ip != host.name,
+  );
 }
 
-export async function getHostsFromEtcHosts(): Promise<hostile.Lines> {
-  return new Promise((resolve, reject) => {
-    hostile.get(false, (err, lines) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(lines);
-      }
-    });
-  });
+export async function getHostsFromEtcHosts() {
+  const lines = await $`cat /etc/hosts`.text();
+  return select(
+    lines.split("\n"),
+    (line: string) => line.trim(),
+    (line: string) => !line.startsWith("#") && line.trim().length > 0,
+  );
+}
+
+export async function getUniqueHosts() {
+  const newHosts = await getHostsFromDatabase();
+  console.log(JSON.stringify(newHosts, null, 2));
+  const existingHosts = await getHostsFromEtcHosts();
+  const hosts = [...(existingHosts || []), ...(newHosts || [])];
+  return Array.from(new Set(hosts));
 }
 
 export async function writeHostsToFile() {
-  // get possible new hosts from database
-  const newHosts = await getHostsFromDatabase();
-  const existingHosts = await getHostsFromEtcHosts();
-
-  // Combine new hosts with existing hosts
-  const hosts = [...existingHosts, ...newHosts];
-  // Remove duplicates
-  const uniqueHosts = Array.from(new Set(hosts));
-
   // Write to /etc/hosts
-  writeFile("/etc/hosts", uniqueHosts.join("\n"), (err) => {
+  const hosts = await getUniqueHosts();
+  writeFile("/etc/hosts", hosts.join("\n"), (err) => {
     if (err) {
       console.error("Error writing to /etc/hosts:", err);
     } else {
       console.log("Hosts file updated successfully.");
     }
   });
-
-  // get existing hosts from /etc/hosts
-  // const existingHosts = hostile.get(true, function (err, lines) {
-  //   if (err) {
-  //     console.error("Error reading /etc/hosts:", err);
-  //     return [];
-  //   }
-  //   return lines;
-  // });
-
-  // write new hosts to /etc/hosts if they don't already exist
-  // for (const host of hosts) {
-  //   const hostLine = `${host.ip} ${host.name}`;
-  //   if (!existingHosts.includes(hostLine)) {
-  //     hostile.set(host.ip, host.name, function(err) {
-  //       if (err) {
-  //         console.error("Error writing to /etc/hosts:", err);
-  //       } else {
-  //         console.log(`Added host: ${hostLine}`);
-  //       }
-  //     });
-  //   }
-  // }
 }

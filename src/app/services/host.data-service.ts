@@ -35,3 +35,11 @@ export async function moveHostsToHistory(): Promise<void> {
 export async function selectAllHosts(): Promise<NowSchema[]> {
   return await db.select().from(nowTable);
 }
+
+export async function selectHostsWithHostname(): Promise<NowSchema[]> {
+  const hosts = await db.select().from(nowTable);
+  return hosts.filter(
+    (host: NowSchema) =>
+      !/^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/.test(host.host_name || ""),
+  );
+}

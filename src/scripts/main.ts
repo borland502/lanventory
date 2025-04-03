@@ -22,14 +22,27 @@ program
   });
 
 program
-  .command("dump-hosts")
-  .description("Dump hosts from database to /etc/hosts")
-  .action(async () => {
-    try {
-      await writeHostsToFile();
-    } catch (error) {
-      console.error("Error dumping hosts:", error);
-    }
-  });
+  .command("dump")
+  .description("Dump data from database to files")
+  .addCommand(
+    new Command("hosts")
+      .description("Dump hosts to /etc/hosts")
+      .action(async () => {
+        try {
+          await writeHostsToFile();
+        } catch (error) {
+          console.error("Error dumping hosts:", error);
+        }
+      }),
+  );
+// ).addCommand(
+//   new Command("ssh-config")
+//   .description("Dump hosts to ~/.ssh/config")
+//   .action(async () => {
+//     try {
+//       await
+//     }
+//   })
+// );
 
 program.parse(process.argv);

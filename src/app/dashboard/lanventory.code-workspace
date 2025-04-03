@@ -1,10 +1,7 @@
 {
   "folders": [
     {
-      "path": "../../..",
-    },
-    {
-      "path": "../../../../.local/share/lanventory",
+      "path": "../..",
     },
   ],
 }

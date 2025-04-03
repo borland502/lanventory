@@ -24,11 +24,22 @@ tasks:
       - bun.lock
 
   build:
-    desc: "Build the SPA for lanventory"
+    desc: "Build the SEA for lanventory"
     deps:
       - init
     cmds:
-      - bun build src/scripts/main.ts --compile --outfile ./dist/lanventory
+      - |
+        # dynamically select target based on TARGET env variable, default to bun-darwin-arm64 if not set
+        bun build --compile --minify --sourcemap src/scripts/main.ts --target {{.TARGET}} --outfile {{.OUTFILE}}
+    vars:
+      TARGET:
+        sh: |
+          OS=$(uname -s | tr '[:upper:]' '[:lower:]'); \
+          ARCH=$(uname -m); \
+          if [ "$ARCH" = "x86_64" ]; then ARCH="x64"; fi; \
+          echo "bun-${OS}-${ARCH}"
+      OUTFILE:
+        sh: echo ${XDG_BIN_HOME:-~/.local/bin}/lanventory
 
   run:
     desc: "Run the test application for lanventory"
