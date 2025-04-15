@@ -1,0 +1,86 @@
+version: "3"
+
+env:
+  DATABASE_URL: "file:{{.HOME}}/.local/share/lanventory/lanventory.sqlite"
+  DB_AUTH_TOKEN: IF_USING_TURSO
+  HOST_NAME: "http://localhost:3000"
+
+tasks:
+  init:
+    silent: true
+    cmds:
+      - bun install
+      # Dump some environment variables to a nodejs friendly .env file TODO: Copy sample to .config/lanventory/.env and then configure with defaults per env
+      - |
+        cat <<'EOF' > .env
+        DATABASE_URL={{.DATABASE_URL}}
+        DB_AUTH_TOKEN={{.DB_AUTH_TOKEN}}
+        HOST_NAME={{.HOST_NAME}}
+        EOF
+      - cmd: mkdir -p {{.XDG_DATA_HOME}}/lanventory
+    sources:
+      - node_modules
+    generates:
+      - bun.lock
+
+  build:
+    desc: "Build the SEA for lanventory"
+    deps:
+      - init
+    cmds:
+      - |
+        # dynamically select target based on TARGET env variable, default to bun-darwin-arm64 if not set
+        bun build --compile --minify --sourcemap src/scripts/main.ts --target {{.TARGET}} --outfile {{.OUTFILE}}
+    vars:
+      TARGET:
+        sh: |
+          OS=$(uname -s | tr '[:upper:]' '[:lower:]'); \
+          ARCH=$(uname -m); \
+          if [ "$ARCH" = "x86_64" ]; then ARCH="x64"; fi; \
+          echo "bun-${OS}-${ARCH}"
+      OUTFILE:
+        sh: echo ${XDG_BIN_HOME:-~/.local/bin}/lanventory
+
+  run:
+    desc: "Run the test application for lanventory"
+    deps:
+      - init
+    cmds:
+      - bun run dev
+
+  drizzle-gen:
+    desc: "Generate the database schema"
+    deps:
+      - init
+    cmds:
+      - bunx drizzle-kit generate --config="drizzle.config.ts"
+
+  drizzle-sync:
+    desc: "Sync the database with the latest schema"
+    deps:
+      - init
+    cmds:
+      - bunx drizzle-kit push --config="drizzle.config.ts"
+
+  drizzle-studio:
+    desc: "Open the database studio"
+    deps:
+      - init
+    cmds:
+      - bunx drizzle-kit studio --config="drizzle.config.ts"
+
+  drizzle-reset:
+    desc: "Reset the database"
+    deps:
+      - init
+    cmds:
+      - bunx drizzle-kit reset --config="drizzle.config.ts"
+
+  tools:nmap:
+    desc: "Install nmap"
+    status:
+      - $(command -v nmap) || brew install nmap
+    deps:
+      - init
+    cmds:
+      - bun run src/bin/main.ts nmap 192.168.2.0/24 /tmp/ip-range.xml
