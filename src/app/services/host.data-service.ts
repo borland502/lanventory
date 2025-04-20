@@ -1,6 +1,6 @@
 "use server";
 
-import { NowInsertSchema, NowSchema, nowTable } from "@/db/schema";
+import { NowInsertSchema, NowSchema, nowTable, portsTable } from "@/db/schema";
 import { db } from "@/db";
 import { sql } from "drizzle-orm";
 import { historyTable } from "@/db/schema";
@@ -10,9 +10,16 @@ export async function upsertHosts(hosts: NowInsertSchema[]) {
     .insert(nowTable)
     .values(hosts)
     .onConflictDoUpdate({
-      target: [nowTable.id],
+      target: [nowTable.ip],
       set: {
-        known: sql`EXCLUDED.known`,
+        mac: sql`EXCLUDED.mac`,
+        host_name: sql`EXCLUDED.host_name`,
+        name: sql`EXCLUDED.name`,
+        hw: sql`EXCLUDED.hw`,
+        date: sql`EXCLUDED.date`,
+        now: sql`EXCLUDED.now`,
+        // Don't update known status if it's already set
+        // known: sql`EXCLUDED.known`,
       },
     });
 }
@@ -27,6 +34,14 @@ export async function moveHostsToHistory(): Promise<void> {
   if (hostsToMove.length === 0) return;
 
   await db.transaction(async (trx) => {
+    // First delete any port records for hosts that will be moved
+    for (const host of hostsToMove) {
+      if (host.id) {
+        await trx.delete(portsTable).where(sql`${portsTable.host_id} = ${host.id}`);
+      }
+    }
+    
+    // Then move hosts to history and delete from now table
     await trx.insert(historyTable).values(hostsToMove);
     await trx.delete(nowTable).where(sql`${nowTable.known} != 1`);
   });

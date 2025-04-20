@@ -48,3 +48,5 @@ drizzle
 
 # Taskfiles
 .task
+
+*.log

@@ -1,5 +1,5 @@
 // Adapter to permit split of the schema into dedicated files
-import * as schema from ".";
+import * as schema from "./schema";
 export type { userSchema, userUpdateSchema } from "./schema/users";
 import { drizzle } from "drizzle-orm/libsql";
 import { createClient } from "@libsql/client";
