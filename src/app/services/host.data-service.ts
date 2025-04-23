@@ -4,11 +4,32 @@ import { NowInsertSchema, NowSchema, nowTable, portsTable } from "@/db/schema";
 import { db } from "@/db";
 import { sql } from "drizzle-orm";
 import { historyTable } from "@/db/schema";
+import { arpLookup } from "@/lib/probes/arp"; // Import arpLookup
+import { networkInterfaces } from "node:os";
+import { IPv4 } from "ip-num";
+import logger from "@/lib/logger";
 
 export async function upsertHosts(hosts: NowInsertSchema[]) {
+  // Get mac address for each host before upserting
+  const hostsWithMac = await Promise.all(
+    hosts.map(async (host) => {
+      try {
+        if (host.ip) {
+          const macAddresses = await arpLookup(new IPv4(host.ip));
+          logger.info(macAddresses);
+          host.mac = macAddresses[0] || null; // Assign the first MAC address or null if none
+        }
+      } catch (error) {
+        console.error(`Error getting MAC address for ${host.ip}:`, error);
+        host.mac = null;
+      }
+      return host;
+    }),
+  );
+
   await db
     .insert(nowTable)
-    .values(hosts)
+    .values(hostsWithMac)
     .onConflictDoUpdate({
       target: [nowTable.ip],
       set: {
@@ -37,10 +58,12 @@ export async function moveHostsToHistory(): Promise<void> {
     // First delete any port records for hosts that will be moved
     for (const host of hostsToMove) {
       if (host.id) {
-        await trx.delete(portsTable).where(sql`${portsTable.host_id} = ${host.id}`);
+        await trx
+          .delete(portsTable)
+          .where(sql`${portsTable.host_id} = ${host.id}`);
       }
     }
-    
+
     // Then move hosts to history and delete from now table
     await trx.insert(historyTable).values(hostsToMove);
     await trx.delete(nowTable).where(sql`${nowTable.known} != 1`);
@@ -48,7 +71,8 @@ export async function moveHostsToHistory(): Promise<void> {
 }
 
 export async function selectAllHosts(): Promise<NowSchema[]> {
-  return await db.select().from(nowTable);
+  const hosts = await db.select().from(nowTable);
+  return hosts;
 }
 
 export async function selectHostsWithHostname(): Promise<NowSchema[]> {
